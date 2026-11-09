@@ -193,6 +193,31 @@ svg text{font-family:var(--f-sans)}
 footer{border-top:1px solid var(--line);padding:26px 0;color:var(--muted);font-size:13px}
 footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
 
+/* video nudge */
+.vn{position:fixed;right:20px;bottom:20px;z-index:60;font-family:var(--f-sans)}
+.vn[hidden]{display:none!important}
+.vn-card{position:relative;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:14px 16px 14px 14px;box-shadow:0 24px 60px -20px rgba(13,13,22,.45);max-width:460px;transform:translateY(24px) scale(.96);opacity:0;transition:transform .6s var(--ease),opacity .6s var(--ease)}
+.vn.show .vn-card{transform:none;opacity:1}
+.vn-row{display:flex;gap:14px;align-items:center}
+.vn-bubble{position:relative;flex:0 0 160px;width:160px;height:160px;border-radius:50%;padding:0;border:3px solid var(--violet);overflow:visible;cursor:pointer;background:#111;box-shadow:0 0 0 0 rgba(91,91,246,.5);animation:vnPulse 2.4s infinite}
+.vn-bubble video{width:100%;height:100%;border-radius:50%;object-fit:cover;transform:scale(1.08);display:block}
+.vn-bubble video{clip-path:circle(46% at 50% 50%)}
+.vn-live{position:absolute;right:12px;top:10px;width:18px;height:18px;border-radius:50%;background:#2EAD6B;border:2px solid #fff}
+.vn-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:34px;height:34px;border-radius:50%;background:rgba(13,13,22,.55);color:#fff;font-size:13px;display:grid;place-items:center;padding-left:2px;opacity:0;transition:opacity .2s}
+.vn-bubble:hover .vn-play{opacity:1}
+@keyframes vnPulse{0%{box-shadow:0 0 0 0 rgba(91,91,246,.45)}70%{box-shadow:0 0 0 14px rgba(91,91,246,0)}100%{box-shadow:0 0 0 0 rgba(91,91,246,0)}}
+.vn-msg .mono{color:var(--violet);font-size:11px}
+.vn-msg p{font-size:14.5px;line-height:1.45;color:var(--muted);margin:4px 0 10px}
+.vn-msg p b{color:var(--ink)}
+.vn-cta{display:inline-block;background:var(--violet);color:#fff;border:0;border-radius:10px;padding:9px 14px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit}
+.vn-link{display:table;margin-top:8px;font-size:14px;white-space:nowrap}
+.vn-cta:hover{background:#4747E6}
+.vn-x{position:absolute;top:-10px;right:-10px;width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--muted);font-size:17px;line-height:1;cursor:pointer;box-shadow:0 4px 12px rgba(13,13,22,.15)}
+.vn.mini .vn-card{padding:0;border-radius:50%;background:transparent;border:0;box-shadow:none}
+.vn.mini .vn-msg,.vn.mini .vn-x{display:none}
+@media(max-width:560px){.vn{right:12px;bottom:12px;left:12px;display:flex;justify-content:flex-end}.vn-card{max-width:100%}.vn-bubble{flex-basis:112px;width:112px;height:112px}.vn-msg p{font-size:13.5px}}
+@media (prefers-reduced-motion:reduce){.vn-bubble{animation:none}}
+
 /* reveal */
 .rv{opacity:0;transform:translateY(22px);transition:opacity .9s var(--ease),transform .9s var(--ease)}
 .rv.in{opacity:1;transform:none}
@@ -631,6 +656,25 @@ footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
 
 <div class="tip" id="tip"></div>
 
+<!-- video nudge: Sramana's face in a corner bubble, plays the walkthrough on click -->
+<aside class="vn" id="vn" aria-label="A short video from Sramana" hidden>
+  <div class="vn-card">
+    <button class="vn-x" id="vnClose" aria-label="Hide this message">×</button>
+    <div class="vn-row">
+      <a class="vn-bubble" href="https://www.loom.com/share/79d0256f76494ff48ebf10264a1c92c6" target="_blank" rel="noopener" aria-label="Watch Sramana's video in a new tab">
+        <video id="vnLoop" src="media/sramana-loop.mp4" poster="media/sramana-poster.jpg" muted loop playsinline preload="metadata"></video>
+        <span class="vn-live"></span>
+        <span class="vn-play" aria-hidden="true">▶</span>
+      </a>
+      <div class="vn-msg">
+        <p><b>Hi, I'm Sramana!</b> I made a short video walking through these ideas. Press play and scroll along with me.</p>
+        <a class="vn-cta" href="https://www.loom.com/share/79d0256f76494ff48ebf10264a1c92c6" target="_blank" rel="noopener">▶ Play the video</a>
+        <a class="vn-link" href="https://sramanagiri99-creates.github.io/portfolio/" target="_blank" rel="noopener">See my portfolio</a>
+      </div>
+    </div>
+  </div>
+</aside>
+
 <script>
 (function(){
   var NS="http://www.w3.org/2000/svg";
@@ -708,6 +752,24 @@ footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
   document.querySelectorAll(".rv").forEach(function(e){io.observe(e);});
   // safety net: never leave a section hidden if the observer misses it (fast scroll, jump links)
   window.addEventListener("scroll",function(){document.querySelectorAll(".rv:not(.in)").forEach(function(e){if(e.getBoundingClientRect().top<window.innerHeight){io.takeRecords();e.classList.add("in");e.querySelectorAll(".fill").forEach(function(fl){fl.style.width=fl.dataset.w+"%";});}});},{passive:true});
+})();
+
+// video nudge
+(function(){
+  var vn=document.getElementById("vn"),loop=document.getElementById("vnLoop");
+  var reduce=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var dismissed=false;try{dismissed=sessionStorage.getItem("vnMini")==="1";}catch(e){}
+  var shown=false;
+  function show(){
+    if(shown)return;shown=true;vn.hidden=false;
+    if(dismissed)vn.classList.add("mini");
+    requestAnimationFrame(function(){vn.classList.add("show");});
+    if(!reduce){var p=loop.play();if(p&&p.catch)p.catch(function(){});}
+  }
+  // appear once the visitor starts scrolling past the intro (or after a short pause)
+  window.addEventListener("scroll",function(){if(window.scrollY>window.innerHeight*.5)show();},{passive:true});
+  setTimeout(show,6000);
+  document.getElementById("vnClose").addEventListener("click",function(){vn.classList.add("mini");try{sessionStorage.setItem("vnMini","1");}catch(e){}});
 })();
 </script>
 </body>
